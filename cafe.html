@@ -106,8 +106,8 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             cursor: pointer;
-    font-family: "Noto Sans TC", sans-serif;
-    color: #333;
+            font-family: "Noto Sans TC", sans-serif;
+            color: #333;
         }
 
         .cafe-card:hover {
@@ -300,6 +300,36 @@
             color: #ffc107;
         }
 
+        .score-badges {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .score-badge {
+            background: #e9ecef;
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            color: #495057;
+        }
+
+        .score-badge.high {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .score-badge.medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .score-badge.low {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 2rem;
@@ -340,13 +370,12 @@
 
             <div class="filters">
                 <button class="filter-btn active" data-filter="all">全部</button>
-                <button class="filter-btn" data-filter="wifi">WiFi穩定</button>
-                <button class="filter-btn" data-filter="power">插座充足</button>
+                <button class="filter-btn" data-filter="wifi">WiFi優良</button>
+                <button class="filter-btn" data-filter="seat">座位寬敞</button>
                 <button class="filter-btn" data-filter="quiet">安靜環境</button>
-                <button class="filter-btn" data-filter="dessert">甜點</button>
-                <button class="filter-btn" data-filter="pet_friendly">寵物友善</button>
-                <button class="filter-btn" data-filter="japanese_style">日系風</button>
-                <button class="filter-btn" data-filter="retro">復古</button>
+                <button class="filter-btn" data-filter="tasty">美味餐點</button>
+                <button class="filter-btn" data-filter="cheap">價位實惠</button>
+                <button class="filter-btn" data-filter="music">音樂氛圍</button>
             </div>
         </div>
 
@@ -390,6 +419,19 @@
         let currentView = 'list';
         let isDataLoaded = false;
 
+        // 從地址提取區域
+        function extractDistrict(address) {
+            const districtMatch = address.match(/([^市]+區)/);
+            return districtMatch ? districtMatch[1] : '';
+        }
+
+        // 根據評分獲取評分等級
+        function getScoreLevel(score) {
+            if (score >= 4.5) return 'high';
+            if (score >= 3.5) return 'medium';
+            return 'low';
+        }
+
         // 載入咖啡廳資料
         async function loadCafeData() {
             try {
@@ -404,13 +446,31 @@
                 }
                 
                 const data = await response.json();
-                cafes = data;
-
-                cafes.forEach(c => {
-                if (!Array.isArray(c.features)) {
-                c.features = [];
-                }
-                });
+                
+                // 轉換資料格式以適配現有程式碼
+                cafes = data.map(cafe => ({
+                    id: cafe.id,
+                    name: cafe.name,
+                    address: cafe.address,
+                    district: extractDistrict(cafe.address),
+                    lat: parseFloat(cafe.latitude),
+                    lng: parseFloat(cafe.longitude),
+                    wifi: cafe.wifi || 0,
+                    seat: cafe.seat || 0,
+                    quiet: cafe.quiet || 0,
+                    tasty: cafe.tasty || 0,
+                    cheap: cafe.cheap || 0,
+                    music: cafe.music || 0,
+                    url: cafe.url || '',
+                    open_time: cafe.open_time || '',
+                    limited_time: cafe.limited_time || '',
+                    socket: cafe.socket || '',
+                    standing_desk: cafe.standing_desk || '',
+                    mrt: cafe.mrt || '',
+                    // 計算平均評分
+                    rating: ((cafe.wifi + cafe.seat + cafe.quiet + cafe.tasty + cafe.cheap + cafe.music) / 6).toFixed(1),
+                    reviews: Math.floor(Math.random() * 200) + 50 // 模擬評論數
+                }));
 
                 filteredCafes = [...cafes];
                 isDataLoaded = true;
@@ -461,44 +521,27 @@
             noResults.style.display = 'none';
 
             grid.innerHTML = cafesToRender.map(cafe => `
-                <div class="cafe-card" onclick="showCafeDetails(${cafe.id})">
+                <div class="cafe-card" onclick="showCafeDetails('${cafe.id}')">
                     <div class="cafe-content">
                         <h3 class="cafe-name">${cafe.name}</h3>
                         <div class="cafe-location">
                             <span>📍</span>
                             <span>${cafe.address}</span>
                         </div>
-                        <div class="cafe-features">
-                            ${(cafe.features ?? []).map(feature => {
-                                const featureNames = {
-                                    wifi: 'WiFi穩定',
-                                    power: '插座充足',
-                                    quiet: '安靜環境',
-                                    photo_spot: '拍照景點',
-                                    dessert: '甜點',
-                                    mille_crepe: '千層蛋糕',
-                                    bakery: '烘焙',
-                                    art: '藝術空間',
-                                    pet_friendly: '寵物友善',
-                                    korean_style: '韓系風格',
-                                    photo_studio: '攝影空間',
-                                    cozy: '舒適',
-                                    specialty_coffee: '精品咖啡',
-                                    all_day: '全天供應',
-                                    creative_food: '創意料理',
-                                    natural_fermentation: '自然發酵',
-                                    retro: '復古',
-                                    japanese_style: '日系風格',
-                                    reservation: '需預約',
-                                    camping_style: '露營風格'
-                                };
-                                return `<span class="feature-tag ${feature}">${featureNames[feature] || feature}</span>`;
-                            }).join('')}
+                        <div class="score-badges">
+                            <span class="score-badge ${getScoreLevel(cafe.wifi)}">WiFi: ${cafe.wifi}</span>
+                            <span class="score-badge ${getScoreLevel(cafe.seat)}">座位: ${cafe.seat}</span>
+                            <span class="score-badge ${getScoreLevel(cafe.quiet)}">安靜: ${cafe.quiet}</span>
+                            <span class="score-badge ${getScoreLevel(cafe.tasty)}">美味: ${cafe.tasty}</span>
+                            <span class="score-badge ${getScoreLevel(cafe.cheap)}">價位: ${cafe.cheap}</span>
+                            <span class="score-badge ${getScoreLevel(cafe.music)}">音樂: ${cafe.music}</span>
                         </div>
                         <div class="cafe-rating">
                             <span class="stars">${generateStars(cafe.rating)}</span>
                             <span class="rating-text">${cafe.rating} (${cafe.reviews} 則評論)</span>
                         </div>
+                        ${cafe.open_time ? `<div style="margin-top: 0.5rem; font-size: 0.9rem; color: #666;">⏰ ${cafe.open_time}</div>` : ''}
+                        ${cafe.limited_time ? `<div style="margin-top: 0.3rem; font-size: 0.8rem; color: #dc3545;">⚠️ ${cafe.limited_time}</div>` : ''}
                     </div>
                 </div>
             `).join('');
@@ -526,7 +569,17 @@
 
             // 特色篩選
             if (currentFeatureFilter !== 'all') {
-                filtered = filtered.filter(cafe => cafe.features.includes(currentFeatureFilter));
+                filtered = filtered.filter(cafe => {
+                    switch(currentFeatureFilter) {
+                        case 'wifi': return cafe.wifi >= 4;
+                        case 'seat': return cafe.seat >= 4;
+                        case 'quiet': return cafe.quiet >= 4;
+                        case 'tasty': return cafe.tasty >= 4;
+                        case 'cheap': return cafe.cheap >= 4;
+                        case 'music': return cafe.music >= 4;
+                        default: return true;
+                    }
+                });
             }
 
             // 搜尋篩選
@@ -589,38 +642,20 @@
                 const popupContent = `
                     <div class="cafe-popup">
                         <div class="popup-content">
-                            <div class="popup-name">${cafe.image || '☕'} ${cafe.name}</div>
+                            <div class="popup-name">☕ ${cafe.name}</div>
                             <div class="popup-address">${cafe.address}</div>
                             <div class="popup-features">
-                                ${(cafe.features ?? []).map(feature => {
-                                    const featureNames = {
-                                        wifi: 'WiFi',
-                                        power: '插座',
-                                        quiet: '安靜',
-                                        photo_spot: '拍照景點',
-                                        dessert: '甜點',
-                                        mille_crepe: '千層蛋糕',
-                                        bakery: '烘焙',
-                                        art: '藝術空間',
-                                        pet_friendly: '寵物友善',
-                                        korean_style: '韓系風格',
-                                        photo_studio: '攝影空間',
-                                        cozy: '舒適',
-                                        specialty_coffee: '精品咖啡',
-                                        all_day: '全天供應',
-                                        creative_food: '創意料理',
-                                        natural_fermentation: '自然發酵',
-                                        retro: '復古',
-                                        japanese_style: '日系風格',
-                                        reservation: '需預約',
-                                        camping_style: '露營風格'
-                                    };
-                                    return `<span class="popup-feature">${featureNames[feature] || feature}</span>`;
-                                }).join('')}
+                                <span class="popup-feature">WiFi: ${cafe.wifi}</span>
+                                <span class="popup-feature">座位: ${cafe.seat}</span>
+                                <span class="popup-feature">安靜: ${cafe.quiet}</span>
+                                <span class="popup-feature">美味: ${cafe.tasty}</span>
+                                <span class="popup-feature">價位: ${cafe.cheap}</span>
+                                <span class="popup-feature">音樂: ${cafe.music}</span>
                             </div>
                             <div class="popup-rating">
                                 ${generateStars(cafe.rating)} ${cafe.rating}
                             </div>
+                            ${cafe.open_time ? `<div style="margin-top: 0.5rem; font-size: 0.8rem;">⏰ ${cafe.open_time}</div>` : ''}
                         </div>
                     </div>
                 `;
