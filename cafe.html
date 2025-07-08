@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>台中咖啡廳推薦</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', 'Microsoft JhengHei', sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4a5c6a 0%, #98a8AB  100%);
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .search-bar {
+            background: white;
+            padding: 2rem;
+            margin: -1rem auto 2rem;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            max-width: 850px;
+            max-height: 300px;   
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+            margin-bottom: 1rem;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #4a5c6a;
+        }
+
+        .filters {
+            display: flex;
+            gap: 1rem;
+            margin: 1rem 0;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid #e9ecef;
+            background: white;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background: #4a5c6a;
+            color: white;
+            border-color: #4a5c6a;
+        }
+
+        .cafe-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .cafe-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+    font-family: "Noto Sans TC", sans-serif;
+    color: #333;
+        }
+
+        .cafe-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .cafe-image {
+            width: 100%;
+            height: 200px;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cafe-image span {
+            position: relative;
+            z-index: 2;
+        }
+
+        .cafe-content {
+            padding: 1.5rem;
+        }
+
+        .cafe-name {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .cafe-location {
+            color: #666;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .cafe-features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-tag {
+            background: #f8f9fa;
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            color: #555;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .cafe-rating {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .stars {
+            color: #ffc107;
+        }
+
+        .rating-text {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .district-filter {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+
+        .error {
+            text-align: center;
+            padding: 3rem;
+            color: #dc3545;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin: 2rem 0;
+        }
+
+        .map-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin: 2rem 0;
+            overflow: hidden;
+        }
+
+        .map-header {
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #4a5c6a 0%, #98a8AB  100%);
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        #map {
+            height: 400px;
+            width: 100%;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 1rem;
+            margin: 2rem 0;
+            justify-content: center;
+        }
+
+        .toggle-btn {
+            padding: 0.8rem 1.5rem;
+            border: 2px solid #4a5c6a;
+            background: white;
+            color: #4a5c6a;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .toggle-btn.active {
+            background: #4a5c6a;
+            color: white;
+        }
+
+        .cafe-popup {
+            max-width: 250px;
+        }
+
+        .popup-content {
+            padding: 0.5rem 0;
+        }
+
+        .popup-name {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .popup-address {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+
+        .popup-features {
+            display: flex;
+            gap: 0.3rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.5rem;
+        }
+
+        .popup-feature {
+            background: #f0f0f0;
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.7rem;
+        }
+
+        .popup-rating {
+            font-size: 0.9rem;
+            color: #ffc107;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .cafe-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .filters {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1><strong>台中咖啡廳推薦!!</strong></h1>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="search-bar">
+            <input type="text" class="search-input" placeholder="搜尋咖啡廳名稱或地點..." id="searchInput">
+            
+            <div class="district-filter">
+                <button class="filter-btn active" data-district="all">全部區域</button>
+                <button class="filter-btn" data-district="西屯區">西屯區</button>
+                <button class="filter-btn" data-district="南屯區">南屯區</button>
+                <button class="filter-btn" data-district="北屯區">北屯區</button>
+                <button class="filter-btn" data-district="西區">西區</button>
+                <button class="filter-btn" data-district="中區">中區</button>
+                <button class="filter-btn" data-district="東區">東區</button>
+                <button class="filter-btn" data-district="南區">南區</button>
+                <button class="filter-btn" data-district="北區">北區</button>
+            </div>
+
+            <div class="filters">
+                <button class="filter-btn active" data-filter="all">全部</button>
+                <button class="filter-btn" data-filter="wifi">WiFi穩定</button>
+                <button class="filter-btn" data-filter="power">插座充足</button>
+                <button class="filter-btn" data-filter="quiet">安靜環境</button>
+                <button class="filter-btn" data-filter="dessert">甜點</button>
+                <button class="filter-btn" data-filter="pet_friendly">寵物友善</button>
+                <button class="filter-btn" data-filter="japanese_style">日系風</button>
+                <button class="filter-btn" data-filter="retro">復古</button>
+            </div>
+        </div>
+
+        <div class="view-toggle">
+            <button class="toggle-btn active" id="listViewBtn">📋清單檢視</button>
+            <button class="toggle-btn" id="mapViewBtn">🗺️地圖檢視</button>
+        </div>
+
+        <div class="map-container" id="mapContainer" style="display: none;">
+            <div class="map-header">
+                📍台中咖啡廳位置地圖
+            </div>
+            <div id="map"></div>
+        </div>
+
+        <div id="cafeGrid" class="cafe-grid">
+            <!-- 咖啡廳卡片將在這裡動態生成 -->
+        </div>
+
+        <div id="loading" class="loading">
+            載入中...
+        </div>
+
+        <div id="noResults" class="no-results" style="display: none;">
+            找不到符合條件的咖啡廳
+        </div>
+
+        <div id="error" class="error" style="display: none;">
+            載入資料時發生錯誤，請確認 taichung.json 檔案是否存在
+        </div>
+    </div>
+
+    <script>
+        // 全域變數
+        let cafes = [];
+        let filteredCafes = [];
+        let currentDistrictFilter = 'all';
+        let currentFeatureFilter = 'all';
+        let map = null;
+        let markers = [];
+        let currentView = 'list';
+        let isDataLoaded = false;
+
+        // 載入咖啡廳資料
+        async function loadCafeData() {
+            try {
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('error').style.display = 'none';
+                document.getElementById('cafeGrid').style.display = 'none';
+                
+                const response = await fetch('./taichung.json');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                cafes = data;
+                filteredCafes = [...cafes];
+                isDataLoaded = true;
+                
+                console.log('成功載入咖啡廳資料:', cafes.length, '筆');
+                
+                // 隱藏載入中提示
+                document.getElementById('loading').style.display = 'none';
+                
+                // 初始化應用程式
+                initializeApp();
+                
+            } catch (error) {
+                console.error('載入咖啡廳資料失敗:', error);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error').innerHTML = `
+                    <h3>載入資料時發生錯誤</h3>
+                    <p>請確認 taichung.json 檔案是否存在於相同目錄下</p>
+                    <p>錯誤訊息: ${error.message}</p>
+                `;
+            }
+        }
+
+        // 初始化應用程式
+        function initializeApp() {
+            if (!isDataLoaded) return;
+            
+            // 初始化事件監聽器
+            setupEventListeners();
+            
+            // 渲染咖啡廳
+            renderCafes();
+        }
+
+        function renderCafes(cafesToRender = filteredCafes) {
+            const grid = document.getElementById('cafeGrid');
+            const noResults = document.getElementById('noResults');
+            
+            if (cafesToRender.length === 0) {
+                grid.innerHTML = '';
+                grid.style.display = 'none';
+                noResults.style.display = 'block';
+                return;
+            }
+
+            grid.style.display = 'grid';
+            noResults.style.display = 'none';
+
+            grid.innerHTML = cafesToRender.map(cafe => `
+                <div class="cafe-card" onclick="showCafeDetails(${cafe.id})">
+                    <div class="cafe-content">
+                        <h3 class="cafe-name">${cafe.name}</h3>
+                        <div class="cafe-location">
+                            <span>📍</span>
+                            <span>${cafe.address}</span>
+                        </div>
+                        <div class="cafe-features">
+                            ${cafe.features.map(feature => {
+                                const featureNames = {
+                                    wifi: 'WiFi穩定',
+                                    power: '插座充足',
+                                    quiet: '安靜環境',
+                                    photo_spot: '拍照景點',
+                                    dessert: '甜點',
+                                    mille_crepe: '千層蛋糕',
+                                    bakery: '烘焙',
+                                    art: '藝術空間',
+                                    pet_friendly: '寵物友善',
+                                    korean_style: '韓系風格',
+                                    photo_studio: '攝影空間',
+                                    cozy: '舒適',
+                                    specialty_coffee: '精品咖啡',
+                                    all_day: '全天供應',
+                                    creative_food: '創意料理',
+                                    natural_fermentation: '自然發酵',
+                                    retro: '復古',
+                                    japanese_style: '日系風格',
+                                    reservation: '需預約',
+                                    camping_style: '露營風格'
+                                };
+                                return `<span class="feature-tag ${feature}">${featureNames[feature] || feature}</span>`;
+                            }).join('')}
+                        </div>
+                        <div class="cafe-rating">
+                            <span class="stars">${generateStars(cafe.rating)}</span>
+                            <span class="rating-text">${cafe.rating} (${cafe.reviews} 則評論)</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function generateStars(rating) {
+            const fullStars = Math.floor(rating);
+            const hasHalfStar = rating % 1 >= 0.5;
+            let stars = '★'.repeat(fullStars);
+            if (hasHalfStar) stars += '☆';
+            const emptyStars = 5 - Math.ceil(rating);
+            stars += '☆'.repeat(emptyStars);
+            return stars;
+        }
+
+        function filterCafes() {
+            if (!isDataLoaded) return;
+            
+            let filtered = [...cafes];
+
+            // 區域篩選
+            if (currentDistrictFilter !== 'all') {
+                filtered = filtered.filter(cafe => cafe.district === currentDistrictFilter);
+            }
+
+            // 特色篩選
+            if (currentFeatureFilter !== 'all') {
+                filtered = filtered.filter(cafe => cafe.features.includes(currentFeatureFilter));
+            }
+
+            // 搜尋篩選
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            if (searchTerm) {
+                filtered = filtered.filter(cafe => 
+                    cafe.name.toLowerCase().includes(searchTerm) ||
+                    cafe.address.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            filteredCafes = filtered;
+            renderCafes();
+            
+            // 如果是地圖檢視，更新地圖標記
+            if (currentView === 'map') {
+                updateMapMarkers();
+            }
+        }
+
+        function showCafeDetails(cafeId) {
+            toggleView('map'); 
+            setTimeout(() => {
+                const marker = markers.find(m => m.cafeId === cafeId);
+                if (marker) {
+                    map.setView(marker.getLatLng(), 17); 
+                    marker.openPopup();
+                }
+            }, 300);
+        }
+
+        // 初始化地圖
+        function initMap() {
+            if (map || !isDataLoaded) return; // 避免重複初始化
+            
+            // 以台中市中心為地圖中心
+            map = L.map('map').setView([24.1477, 120.6736], 12);
+            
+            // 添加地圖圖層
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+            
+            // 添加咖啡廳標記
+            updateMapMarkers();
+        }
+
+        function updateMapMarkers() {
+            if (!map || !isDataLoaded) return;
+            
+            // 清除現有標記
+            markers.forEach(marker => map.removeLayer(marker));
+            markers = [];
+            
+            // 添加新標記
+            filteredCafes.forEach(cafe => {
+                const marker = L.marker([cafe.lat, cafe.lng]).addTo(map);
+                marker.cafeId = cafe.id;
+                
+                const popupContent = `
+                    <div class="cafe-popup">
+                        <div class="popup-content">
+                            <div class="popup-name">${cafe.image || '☕'} ${cafe.name}</div>
+                            <div class="popup-address">${cafe.address}</div>
+                            <div class="popup-features">
+                                ${cafe.features.map(feature => {
+                                    const featureNames = {
+                                        wifi: 'WiFi',
+                                        power: '插座',
+                                        quiet: '安靜',
+                                        photo_spot: '拍照景點',
+                                        dessert: '甜點',
+                                        mille_crepe: '千層蛋糕',
+                                        bakery: '烘焙',
+                                        art: '藝術空間',
+                                        pet_friendly: '寵物友善',
+                                        korean_style: '韓系風格',
+                                        photo_studio: '攝影空間',
+                                        cozy: '舒適',
+                                        specialty_coffee: '精品咖啡',
+                                        all_day: '全天供應',
+                                        creative_food: '創意料理',
+                                        natural_fermentation: '自然發酵',
+                                        retro: '復古',
+                                        japanese_style: '日系風格',
+                                        reservation: '需預約',
+                                        camping_style: '露營風格'
+                                    };
+                                    return `<span class="popup-feature">${featureNames[feature] || feature}</span>`;
+                                }).join('')}
+                            </div>
+                            <div class="popup-rating">
+                                ${generateStars(cafe.rating)} ${cafe.rating}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                marker.bindPopup(popupContent);
+                markers.push(marker);
+            });
+            
+            // 調整地圖視野以包含所有標記
+            if (markers.length > 0) {
+                const group = new L.featureGroup(markers);
+                map.fitBounds(group.getBounds().pad(0.1));
+            }
+        }
+
+        // 切換檢視模式
+        function toggleView(viewType) {
+            const listViewBtn = document.getElementById('listViewBtn');
+            const mapViewBtn = document.getElementById('mapViewBtn');
+            const cafeGrid = document.getElementById('cafeGrid');
+            const mapContainer = document.getElementById('mapContainer');
+            
+            if (viewType === 'list') {
+                listViewBtn.classList.add('active');
+                mapViewBtn.classList.remove('active');
+                cafeGrid.style.display = 'grid';
+                mapContainer.style.display = 'none';
+                currentView = 'list';
+            } else {
+                listViewBtn.classList.remove('active');
+                mapViewBtn.classList.add('active');
+                cafeGrid.style.display = 'none';
+                mapContainer.style.display = 'block';
+                currentView = 'map';
+                
+                // 初始化地圖（如果還沒初始化）
+                setTimeout(() => {
+                    initMap();
+                    if (map) {
+                        map.invalidateSize(); // 重新計算地圖大小
+                    }
+                }, 100);
+            }
+        }
+
+        // 設定事件監聽器
+        function setupEventListeners() {
+            // 搜尋輸入框
+            document.getElementById('searchInput').addEventListener('input', filterCafes);
+
+            // 檢視模式切換按鈕
+            document.getElementById('listViewBtn').addEventListener('click', () => toggleView('list'));
+            document.getElementById('mapViewBtn').addEventListener('click', () => toggleView('map'));
+
+            // 區域篩選按鈕
+            document.querySelectorAll('[data-district]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('[data-district]').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentDistrictFilter = btn.dataset.district;
+                    filterCafes();
+                });
+            });
+
+            // 特色篩選按鈕
+            document.querySelectorAll('[data-filter]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('[data-filter]').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentFeatureFilter = btn.dataset.filter;
+                    filterCafes();
+                });
+            });
+        }
+
+        // 頁面載入時初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCafeData();
+        });
+    </script>
+</body>
+</html>
