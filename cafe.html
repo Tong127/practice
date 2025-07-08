@@ -540,8 +540,8 @@
                             <span class="stars">${generateStars(cafe.rating)}</span>
                             <span class="rating-text">${cafe.rating} (${cafe.reviews} 則評論)</span>
                         </div>
-                        ${cafe.open_time ? `<div style="margin-top: 0.5rem; font-size: 0.9rem; color: #666;">⏰ ${cafe.open_time}</div>` : ''}
-                        ${cafe.limited_time ? `<div style="margin-top: 0.3rem; font-size: 0.8rem; color: #dc3545;">⚠️ ${cafe.limited_time}</div>` : ''}
+                        ${cafe.open_time ? `<div style="margin-top: 0.5rem; font-size: 0.9rem; color: #666;">⏰營業 ${cafe.open_time}</div>` : ''}
+                        ${cafe.limited_time ? `<div style="margin-top: 0.3rem; font-size: 0.8rem; color: #dc3545;">⚠️限時 ${cafe.limited_time}</div>` : ''}
                     </div>
                 </div>
             `).join('');
@@ -655,7 +655,7 @@
                             <div class="popup-rating">
                                 ${generateStars(cafe.rating)} ${cafe.rating}
                             </div>
-                            ${cafe.open_time ? `<div style="margin-top: 0.5rem; font-size: 0.8rem;">⏰ ${cafe.open_time}</div>` : ''}
+                            ${cafe.open_time ? `<div style="margin-top: 0.5rem; font-size: 0.8rem;">⏰營業 ${cafe.open_time}</div>` : ''}
                         </div>
                     </div>
                 `;
