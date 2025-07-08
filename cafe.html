@@ -405,6 +405,13 @@
                 
                 const data = await response.json();
                 cafes = data;
+                
+                cafes.forEach(c => {
+                if (!Array.isArray(c.features)) {
+                c.features = [];
+                }
+                });
+
                 filteredCafes = [...cafes];
                 isDataLoaded = true;
                 
@@ -462,7 +469,7 @@
                             <span>${cafe.address}</span>
                         </div>
                         <div class="cafe-features">
-                            ${cafe.features.map(feature => {
+                            ${(cafe.features ?? []).map(feature => {
                                 const featureNames = {
                                     wifi: 'WiFi穩定',
                                     power: '插座充足',
@@ -585,7 +592,7 @@
                             <div class="popup-name">${cafe.image || '☕'} ${cafe.name}</div>
                             <div class="popup-address">${cafe.address}</div>
                             <div class="popup-features">
-                                ${cafe.features.map(feature => {
+                                ${(cafe.features ?? []).map(feature => {
                                     const featureNames = {
                                         wifi: 'WiFi',
                                         power: '插座',
